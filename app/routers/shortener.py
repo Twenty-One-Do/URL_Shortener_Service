@@ -1,12 +1,24 @@
-import string, random, pytz
+import string, random
 from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .. import crud, schemas, models
 from ..database import get_db
+from user_agents import parse
 
 router = APIRouter()
+
+def get_device_type(user_agent_str):
+    user_agent = parse(user_agent_str)
+    if user_agent.is_mobile:
+        return "Mobile"
+    elif user_agent.is_tablet:
+        return "Tablet"
+    elif user_agent.is_pc:
+        return "PC"
+    else:
+        return "Unknown"
 
 def save_click_stat(db: Session, short_url_id: int, ip: str, device_type: str):
     click_stat = models.ShortUrlStat(
@@ -36,9 +48,10 @@ async def redirect_to_url(short_key: str, request: Request, background_tasks: Ba
     redirect_url = short_url.path.base_url.base_url + short_url.path.path
 
     client_ip = request.client.host
-    user_agent = request.headers.get('user-agent', 'unknown')
+    user_agent_str = request.headers.get('user-agent', 'unknown')
+    device_type = get_device_type(user_agent_str)
 
-    background_tasks.add_task(save_click_stat, db, short_url.id, client_ip, user_agent)
+    background_tasks.add_task(save_click_stat, db, short_url.id, client_ip, device_type)
 
     return RedirectResponse(url=redirect_url, status_code=301)
 
