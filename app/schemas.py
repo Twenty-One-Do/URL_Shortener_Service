@@ -12,15 +12,12 @@ class URLRequest(BaseModel):
     def convert_to_utc(cls, value):
         if value:
             try:
-                # Use dateutil.parser to parse the input date string
                 parsed_dt = parser.isoparse(value)
 
-                # Assume the parsed date is in the local time zone if no time zone is provided
                 if parsed_dt.tzinfo is None:
                     seoul_tz = pytz.timezone('Asia/Seoul')
                     parsed_dt = seoul_tz.localize(parsed_dt)
 
-                # Convert to UTC
                 return parsed_dt.astimezone(pytz.utc)
             except (ValueError, TypeError) as e:
                 raise ValueError("Invalid datetime format. Please use a recognizable format.") from e
