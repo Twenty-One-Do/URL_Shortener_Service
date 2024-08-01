@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 from datetime import datetime
 import pytz
+from dateutil import parser
 
 class URLRequest(BaseModel):
     url: str
@@ -11,12 +12,18 @@ class URLRequest(BaseModel):
     def convert_to_utc(cls, value):
         if value:
             try:
-                seoul_tz = pytz.timezone('Asia/Seoul')
-                local_dt = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
-                local_dt = seoul_tz.localize(local_dt)
-                return local_dt.astimezone(pytz.utc)
-            except ValueError as e:
-                raise ValueError("Invalid datetime format. Use 'YYYY-MM-DDTHH:MM:SS' format.") from e
+                # Use dateutil.parser to parse the input date string
+                parsed_dt = parser.isoparse(value)
+
+                # Assume the parsed date is in the local time zone if no time zone is provided
+                if parsed_dt.tzinfo is None:
+                    seoul_tz = pytz.timezone('Asia/Seoul')
+                    parsed_dt = seoul_tz.localize(parsed_dt)
+
+                # Convert to UTC
+                return parsed_dt.astimezone(pytz.utc)
+            except (ValueError, TypeError) as e:
+                raise ValueError("Invalid datetime format. Please use a recognizable format.") from e
         return value
 
 class ShortURLResponse(BaseModel):
