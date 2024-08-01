@@ -1,8 +1,10 @@
 from sqlalchemy.orm import Session
 from urllib.parse import urlparse
 from . import models
+from datetime import datetime, timedelta
+from typing import Optional
 
-def create_short_url(db: Session, url: str, short_url: str):
+def create_short_url(db: Session, url: str, short_url: str, expiration_datetime: Optional[datetime] = None):
     parsed_url = urlparse(url)
     base_url_str = f"{parsed_url.scheme}://{parsed_url.netloc}"
     path = parsed_url.path
@@ -24,7 +26,9 @@ def create_short_url(db: Session, url: str, short_url: str):
         db.refresh(path_entry)
 
     # short_url 생성
-    short_url_entry = models.ShortUrl(short_url=short_url, path_id=path_entry.id)
+    short_url_entry = models.ShortUrl(short_url=short_url,
+                                      path_id=path_entry.id,
+                                      expiration_date=expiration_datetime)
     db.add(short_url_entry)
     db.commit()
     db.refresh(short_url_entry)
