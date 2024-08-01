@@ -1,4 +1,4 @@
-# URL Shortener Service
+# 🎯 MementoAI_Backend_Assginment: URL Shortener Service
 
 ## 📜 목차
 
@@ -12,8 +12,8 @@
 
 ## 📃 API 문서
 
-Domain: http://to.plz-readme.com/
-Swagger: [http://to.plz-readme.com/docs](http://to.plz-readme.com/docs)
+- Domain: http://to.plz-readme.com/
+- Swagger: [http://to.plz-readme.com/docs](http://to.plz-readme.com/docs)
 
 ## 🖥 실행
 
