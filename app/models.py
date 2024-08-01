@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Date, Boolean, ForeignKey
+import pytz
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
 
@@ -9,8 +10,8 @@ class BaseUrl(Base):
 
     id = Column(Integer, primary_key=True)
     base_url = Column(String, nullable=False)
-    created_at = Column(Date, default=datetime.utcnow)
-    updated_at = Column(Date, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, default=datetime.now())
 
     paths = relationship('Path', back_populates='base_url')
 
@@ -20,9 +21,9 @@ class Path(Base):
     id = Column(Integer, primary_key=True)
     path = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    expiration_date = Column(Date, nullable=True)
-    created_at = Column(Date, default=datetime.utcnow)
-    updated_at = Column(Date, default=datetime.utcnow)
+    expiration_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, default=datetime.now())
     base_url_id = Column(Integer, ForeignKey('base_urls.id'))
 
     base_url = relationship('BaseUrl', back_populates='paths')
@@ -34,9 +35,9 @@ class ShortUrl(Base):
     id = Column(Integer, primary_key=True)
     short_url = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    expiration_date = Column(Date, nullable=True)
-    created_at = Column(Date, default=datetime.utcnow)
-    updated_at = Column(Date, default=datetime.utcnow)
+    expiration_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, default=datetime.now())
     path_id = Column(Integer, ForeignKey('paths.id'))
 
     path = relationship('Path', back_populates='short_urls')
@@ -47,7 +48,7 @@ class ShortUrlStat(Base):
 
     id = Column(Integer, primary_key=True)
     device_type = Column(String, nullable=False)
-    click_time = Column(Date, default=datetime.utcnow)
+    click_time = Column(DateTime, default=datetime.now())
     ip = Column(String, nullable=False)
     short_url_id = Column(Integer, ForeignKey('short_urls.id'))
 

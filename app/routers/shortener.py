@@ -1,4 +1,4 @@
-import string, random
+import string, random, pytz
 from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -12,7 +12,7 @@ def save_click_stat(db: Session, short_url_id: int, ip: str, device_type: str):
     click_stat = models.ShortUrlStat(
         short_url_id=short_url_id,
         device_type=device_type,
-        click_time=datetime.utcnow(),
+        click_time=datetime.now(),
         ip=ip
     )
     db.add(click_stat)
@@ -30,6 +30,9 @@ async def redirect_to_url(short_key: str, request: Request, background_tasks: Ba
     if short_url is None:
         raise HTTPException(status_code=404, detail="Short URL not found")
 
+    if short_url.expiration_date and short_url.expiration_date < datetime.now():
+        raise HTTPException(status_code=404, detail="Short URL expired")
+
     redirect_url = short_url.path.base_url.base_url + short_url.path.path
 
     client_ip = request.client.host
@@ -46,5 +49,9 @@ def shorten_url(url_request: schemas.URLRequest, db: Session = Depends(get_db)):
     while crud.get_short_url(db, short_url_key):
         short_url_key = generate_short_key()
 
-    short_url_entry = crud.create_short_url(db=db, url=url_request.url, short_url=short_url_key)
+    short_url_entry = crud.create_short_url(db=db,
+                                            url=url_request.url,
+                                            short_url=short_url_key,
+                                            expiration_datetime=url_request.expiration_datetime)
+
     return schemas.ShortURLResponse(short_url=short_url_entry.short_url)
