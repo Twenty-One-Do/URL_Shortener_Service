@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .. import crud, schemas, models
-from ..database import get_db
+from ..database import get_db, redis_client
 from user_agents import parse
 
 router = APIRouter()
@@ -35,23 +35,27 @@ def generate_short_key(length=6):
     return ''.join(random.choice(characters) for _ in range(length))
 
 @router.get("/{short_key}", response_class=RedirectResponse)
-async def redirect_to_url(short_key: str, request: Request, background_tasks: BackgroundTasks,
-                          db: Session = Depends(get_db)):
-    short_url = crud.get_short_url(db, short_key)
+async def redirect_to_url(short_key: str, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    cached_data = redis_client.hgetall(short_key)
+    if cached_data:
+        redirect_url = cached_data.get(b'url').decode('utf-8')
+        short_url_id = int(cached_data.get(b'id').decode('utf-8'))
+    else:
+        short_url = crud.get_short_url(db, short_key)
+        if not short_url or (short_url.expiration_date and short_url.expiration_date < datetime.utcnow()):
+            raise HTTPException(status_code=404, detail="Short URL not found or expired")
 
-    if short_url is None:
-        raise HTTPException(status_code=404, detail="Short URL not found")
+        redirect_url = short_url.path.base_url.base_url + short_url.path.path
+        short_url_id = short_url.id
 
-    if short_url.expiration_date and short_url.expiration_date < datetime.now():
-        raise HTTPException(status_code=404, detail="Short URL expired")
-
-    redirect_url = short_url.path.base_url.base_url + short_url.path.path
+        redis_client.hmset(short_key, {'url': redirect_url, 'id': short_url_id})
+        redis_client.expire(short_key, 3600)
 
     client_ip = request.client.host
     user_agent_str = request.headers.get('user-agent', 'unknown')
     device_type = get_device_type(user_agent_str)
 
-    background_tasks.add_task(save_click_stat, db, short_url.id, client_ip, device_type)
+    background_tasks.add_task(save_click_stat, db, short_url_id, client_ip, device_type)
 
     return RedirectResponse(url=redirect_url, status_code=301)
 
