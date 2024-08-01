@@ -42,17 +42,19 @@ docker-compose up -build
 ### 🥈 추가 요구사항: DB 선택과 구조
 최종적으로 Redis와 PostgreSQL을 데이터베이스로 채택했습니다.
 
-Redis 선택 이유:
+#### Redis 선택 이유:
 
 GET 요청이 많고 빠른 응답 속도가 중요하기 때문에 인메모리 데이터베이스인 Redis가 필수적이라고 판단했습니다.
 
-PostgreSQL 선택 이유:
+#### PostgreSQL 선택 이유:
 
 빠른 응답 속도뿐만 아니라 데이터의 일관성도 중요하다고 판단하여, ACID 특성을 강력하게 준수하는 RDBMS를 선택했습니다.
 
 서비스 규모가 커지면 GET 요청뿐만 아니라 쓰기 요청도 많아질 것으로 예상되어, RDBMS 중에서도 강력한 MVCC(Multi-Version Concurrency Control)를 지원하는 PostgreSQL을 사용하여 동시성 처리를 원활하게 하고자 했습니다.
 
 또한, 향후 악성 URL 감지나 URL의 분포에 대한 부가 서비스를 개발하기 위해 URL 메타데이터를 저장하고 이를 JSON 형식으로 관리할 필요가 있을 것으로 보았습니다. 이러한 미래 확장성을 고려할 때 PostgreSQL이 적합하다고 판단했습니다.
+
+#### DB 구조 선택 이유:
 
 ![Blank diagram - Page 1](https://github.com/user-attachments/assets/cd221524-a7ff-4fa0-b7d7-71d28a79cfa5)
 
