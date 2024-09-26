@@ -1,4 +1,4 @@
-# 🎯 MementoAI_Backend_Assginment: URL Shortener Service
+# 🎯 URL Shortener Service
 
 ## 📜 목차
 
